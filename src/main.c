@@ -136,35 +136,36 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     float vertices[] = {
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f, -0.5f,
+        // Vertex coords        Texture coords
+         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
 
-        -0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
 
-        -0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-         0.5f, -0.5f, -0.5f,
+        -0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
 
-        -0.5f,  0.5f, -0.5f,
-         0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
 
-        -0.5f,  0.5f, -0.5f,
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-        -0.5f, -0.5f,  0.5f,
+        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
 
-         0.5f,  0.5f,  0.5f,
-         0.5f,  0.5f, -0.5f,
-         0.5f, -0.5f,  0.5f,
-         0.5f, -0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
     };
 
     uint32_t indices[] = {
@@ -210,8 +211,33 @@ int main() {
 
     // Vertex buffer attributes
     // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
+    // Texture stuff
+    uint32_t texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+    uint8_t *data = stbi_load(TEXTURES_LOCATION "/wall.jpg", &width, &height, &nrChannels, 0);
+    if (data) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+        glad_glGenerateMipmap(GL_TEXTURE_2D);
+    } else {
+        printf("Failed to load texture\n");
+    }
+
+    stbi_image_free(data);
 
     glBindVertexArray(0);
 
@@ -256,12 +282,17 @@ int main() {
 
         int width, height;
         glfwGetWindowSize(window, &width, &height);
+
         mat4 projection = GLM_MAT4_IDENTITY_INIT;
         glm_perspective(glm_rad(camera.fov), (float) width / (float) height, 0.1, 100.0, projection);
+
         mat4 model = GLM_MAT4_IDENTITY_INIT;
+
         shader_setMat4(&objectShader, "model", model);
         shader_setMat4(&objectShader, "view", view);
         shader_setMat4(&objectShader, "projection", projection);
+
+        glBindTexture(GL_TEXTURE_2D, texture);
 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
@@ -269,6 +300,10 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
     
     printf("\n");
     glfwTerminate();
