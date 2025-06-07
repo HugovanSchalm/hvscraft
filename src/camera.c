@@ -43,10 +43,18 @@ void cam_viewmatrix(camera_t *camera, mat4 viewmatrix) {
 void cam_applyMovement(vec3 inputVector, float dt, camera_t *camera) {
     glm_normalize(inputVector);
     vec3 frontMovement;
-    glm_vec3_scale(camera->front, inputVector[2], frontMovement);
+    frontMovement[0] = camera->front[0];
+    frontMovement[1] = 0;
+    frontMovement[2] = camera->front[2];
+    glm_normalize(frontMovement);
+    glm_vec3_scale(frontMovement, inputVector[2], frontMovement);
 
     vec3 sideMovement;
-    glm_vec3_scale(camera->right, inputVector[0], sideMovement);
+    sideMovement[1] = 0;
+    sideMovement[0] = camera->right[0];
+    sideMovement[2] = camera->right[2];
+    glm_normalize(sideMovement);
+    glm_vec3_scale(sideMovement, inputVector[0], sideMovement);
 
     vec3 movement;
     glm_vec3_add(frontMovement, sideMovement, movement);
