@@ -136,48 +136,61 @@ int main() {
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     float vertices[] = {
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f, 
-        0.5f,  0.5f, -0.5f, 
-        0.5f,  0.5f, -0.5f, 
+         0.5f,  0.5f, -0.5f,
         -0.5f,  0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
         -0.5f, -0.5f, -0.5f,
-
-        -0.5f, -0.5f,  0.5f,
-        0.5f, -0.5f,  0.5f, 
-        0.5f,  0.5f,  0.5f, 
-        0.5f,  0.5f,  0.5f, 
-        -0.5f,  0.5f,  0.5f,
-        -0.5f, -0.5f,  0.5f,
 
         -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
+
+        -0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f,  0.5f,
         -0.5f, -0.5f, -0.5f,
+         0.5f, -0.5f, -0.5f,
+
+        -0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f,  0.5f,
+
+        -0.5f,  0.5f, -0.5f,
+        -0.5f,  0.5f,  0.5f,
         -0.5f, -0.5f, -0.5f,
         -0.5f, -0.5f,  0.5f,
-        -0.5f,  0.5f,  0.5f,
 
-        0.5f,  0.5f,  0.5f, 
-        0.5f,  0.5f, -0.5f, 
-        0.5f, -0.5f, -0.5f, 
-        0.5f, -0.5f, -0.5f, 
-        0.5f, -0.5f,  0.5f, 
-        0.5f,  0.5f,  0.5f, 
-
-        -0.5f, -0.5f, -0.5f,
-        0.5f, -0.5f, -0.5f, 
-        0.5f, -0.5f,  0.5f, 
-        0.5f, -0.5f,  0.5f, 
-        -0.5f, -0.5f,  0.5f,
-        -0.5f, -0.5f, -0.5f,
-
-        -0.5f,  0.5f, -0.5f,
-        0.5f,  0.5f, -0.5f, 
-        0.5f,  0.5f,  0.5f, 
-        0.5f,  0.5f,  0.5f, 
-        -0.5f,  0.5f,  0.5f,
-        -0.5f,  0.5f, -0.5f,
+         0.5f,  0.5f,  0.5f,
+         0.5f,  0.5f, -0.5f,
+         0.5f, -0.5f,  0.5f,
+         0.5f, -0.5f, -0.5f,
     };
+
+    uint32_t indices[] = {
+        0, 3, 1,
+        0, 2, 3,
+
+        4, 7, 5,
+        4, 6, 7,
+
+        8, 11, 9,
+        8, 10, 11,
+
+        12, 15, 13,
+        12, 14, 15,
+
+        16, 19, 17,
+        16, 18, 19,
+
+        20, 23, 21,
+        20, 22, 23,
+    };
+
+    shader_t objectShader;
+    const char vertex_path[] = SHADERS_LOCATION "/vertex.glsl";
+    const char fragment_path[] = SHADERS_LOCATION "/fragment.glsl";
+    if (shader_create(vertex_path, fragment_path, &objectShader)) return 1;
 
     uint32_t VAO;
     glGenVertexArrays(1, &VAO);
@@ -189,17 +202,21 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
+    uint32_t EBO;
+    glGenBuffers(1, &EBO);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
     // Vertex buffer attributes
     // Position
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *) 0);
     glEnableVertexAttribArray(0);
 
-    shader_t objectShader;
-    const char vertex_path[] = SHADERS_LOCATION "/vertex.glsl";
-    const char fragment_path[] = SHADERS_LOCATION "/fragment.glsl";
-    if (shader_create(vertex_path, fragment_path, &objectShader)) return 1;
+    glBindVertexArray(0);
 
     glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 
     float deltaTime = 0.0f;
     float lastTime = 0.0f;
@@ -231,7 +248,6 @@ int main() {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         shader_use(&objectShader);
-        shader_setVec3(&objectShader, "viewPos", camera.position);
 
         glBindVertexArray(VAO);
 
@@ -247,7 +263,7 @@ int main() {
         shader_setMat4(&objectShader, "view", view);
         shader_setMat4(&objectShader, "projection", projection);
 
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
         glBindVertexArray(0);
 
         glfwSwapBuffers(window);
