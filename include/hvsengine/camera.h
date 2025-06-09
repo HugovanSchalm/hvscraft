@@ -5,7 +5,7 @@
 #include <stdbool.h>
 
 #define SENSITIVITY 0.1f
-#define MOVESPEED 2.5f
+#define MOVESPEED 5.0f
 #define FOV 70.0f
 
 typedef struct camera {

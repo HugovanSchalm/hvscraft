@@ -10,6 +10,7 @@
 #include "cglm/mat4.h"
 #include "cglm/types.h"
 #include "cglm/vec3.h"
+#include "hvsengine/chunk.h"
 #include "stb_image.h"
 
 #define WIDTH 800
@@ -110,7 +111,7 @@ void processMouse(GLFWwindow *window, double xpos, double ypos) {
 }
 
 int main() {
-    cam_init((vec3) {0.0, 0.0, 3.0}, GLM_YUP, -90.0f, 0.0f, &camera);
+    cam_init((vec3) {0.0, 0.0, 20.0}, GLM_YUP, -90.0f, 0.0f, &camera);
 
     glfwInit();
 
@@ -135,86 +136,10 @@ int main() {
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    float vertices[] = {
-        // Vertex coords        Texture coords
-         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-
-        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-
-        -0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-
-        -0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-
-         0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-    };
-
-    uint32_t indices[] = {
-        0, 3, 1,
-        0, 2, 3,
-
-        4, 7, 5,
-        4, 6, 7,
-
-        8, 11, 9,
-        8, 10, 11,
-
-        12, 15, 13,
-        12, 14, 15,
-
-        16, 19, 17,
-        16, 18, 19,
-
-        20, 23, 21,
-        20, 22, 23,
-    };
-
     shader_t objectShader;
     const char vertex_path[] = SHADERS_LOCATION "/vertex.glsl";
     const char fragment_path[] = SHADERS_LOCATION "/fragment.glsl";
     if (shader_create(vertex_path, fragment_path, &objectShader)) return 1;
-
-    uint32_t VAO;
-    glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
-
-    uint32_t VBO;
-    glGenBuffers(1, &VBO);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    uint32_t EBO;
-    glGenBuffers(1, &EBO);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    // Vertex buffer attributes
-    // Position
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) 0);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void *) (3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
 
     // Texture stuff
     uint32_t texture;
@@ -236,6 +161,9 @@ int main() {
     } else {
         printf("Failed to load texture\n");
     }
+
+    chunk_t chunk;
+    chunk_generate(&chunk);
 
     stbi_image_free(data);
 
@@ -275,8 +203,6 @@ int main() {
 
         shader_use(&objectShader);
 
-        glBindVertexArray(VAO);
-
         mat4 view;
         cam_viewmatrix(&camera, view);
 
@@ -294,17 +220,11 @@ int main() {
 
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        glBindVertexArray(0);
+        chunk_render(&objectShader, &chunk);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &EBO);
-    
     printf("\n");
     glfwTerminate();
     return 0;

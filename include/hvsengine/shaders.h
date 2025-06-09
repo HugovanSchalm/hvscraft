@@ -1,9 +1,9 @@
-#include "cglm/types.h"
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #ifndef _SHADERS_H
 #define _SHADERS_H
+
+#include <cglm/types.h>
+#include <glad/glad.h>
+#include <GLFW/glfw3.h>
 
 typedef struct shader {
     int id;
