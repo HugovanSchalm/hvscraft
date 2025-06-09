@@ -6,6 +6,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
+#include <open-simplex-noise.h>
 
 const vertexcollection_t BACKFACEVERTICES[] = {
         {
@@ -282,10 +284,20 @@ void chunk_setblock(uint32_t x, uint32_t y, uint32_t z, blocktype_t type, chunk_
 }
 
 void chunk_generate(chunk_t *chunk) {
+    srand(time(NULL));
+    struct osn_context *ctx;
+    open_simplex_noise(rand(), &ctx);
+
     for (size_t z = 0; z < CHUNKSIZE; z++) {
         for (size_t y = 0; y < CHUNKSIZE; y++) {
             for (size_t x = 0; x < CHUNKSIZE; x++) {
-                *getBlock(x, y, z, chunk) = SOLID;
+                float noise = open_simplex_noise2(ctx, (double) x / 75.0, (double) z / 75.0);
+                size_t height = (noise + 1.0f / 2.0f) * CHUNKSIZE;
+                if (y <= height) {
+                    *getBlock(x, y, z, chunk) = SOLID;
+                } else {
+                    *getBlock(x, y, z, chunk) = AIR;
+                }
             }
         }
     }
